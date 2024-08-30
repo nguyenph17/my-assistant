@@ -1,0 +1,270 @@
+{
+    "orders": {
+        "description": "The `orders` table stores information about individual items within an order, including pricing, discounts, and product details. ",
+        "column": {
+            "id": {
+                "description": "Unique identifier for each order record (primary key)",
+                "type": "integer"
+            },
+            "company_code": {
+                "description": "Code identifying the company associated with the order",
+                "type": "string"
+            },
+            "source_store_key": {
+                "description": "Identifier for the store where the order originated",
+                "type": "string"
+            },
+            "source_store_name": {
+                "description": "Name of the store where the order originated",
+                "type": "string"
+            },
+            "order_created_time_07": {
+                "description": "Timestamp when the order was created",
+                "type": "timestamp"
+            },
+            "order_finished_time_07": {
+                "description": "Timestamp when the order was completed (can be null)",
+                "type": "timestamp"
+            },
+            "order_id": {
+                "description": "Unique identifier for the order (must be unique across all orders)",
+                "type": "string"
+            },
+            "order_return_id": {
+                "description": "Identifier for any associated return order",
+                "type": "string"
+            },
+            "order_status": {
+                "description": "Current status of the order",
+                "type": "string"
+            },
+            "sub_status_code": {
+                "description": "Additional status information (can be null)",
+                "type": "string"
+            },
+            "created_by": {
+                "description": "Identifier or name of the user who created the order",
+                "type": "string"
+            },
+            "channel_code": {
+                "description": "Code identifying the sales channel used for the order",
+                "type": "string"
+            },
+            "sub_status": {
+                "description": "Detailed status information (can be null)",
+                "type": "string"
+            },
+            "customer_phone_number": {
+                "description": "Contact phone number of the customer",
+                "type": "string"
+            },
+            "price_rule_order_title": {
+                "description": "Title of any pricing rule applied to the order (can be null)",
+                "type": "string"
+            },
+            "special_order_type": {
+                "description": "Indicates if the order is of a special type (can be null)",
+                "type": "string"
+            },
+            "reason": {
+                "description": "Reason for the order or any special conditions",
+                "type": "string"
+            },
+            "discount_code_order": {
+                "description": "Discount code applied to the entire order (can be null)",
+                "type": "string"
+            },
+            "customer_id": {
+                "description": "Unique identifier for the customer who placed the order",
+                "type": "string"
+            },
+            "price_rule_order_id": {
+                "description": "Identifier for the pricing rule applied to the order (can be null)",
+                "type": "string"
+            },
+            "total": {
+                "description": "Total amount of the order before discounts",
+                "type": "float"
+            },
+            "total_after_discount": {
+                "description": "Total amount of the order after applying discounts",
+                "type": "float"
+            },
+            "total_discount_amount": {
+                "description": "Total amount of discounts applied to the order",
+                "type": "float"
+            },
+            "order_amount_after_discount": {
+                "description": "Final order amount after all discounts",
+                "type": "float"
+            },
+            "paid_amount": {
+                "description": "Amount paid by the customer",
+                "type": "float"
+            },
+            "attributed_source_store_key": {
+                "description": "Key of the store attributed to the sale (can be null)",
+                "type": "string"
+            },
+            "attributed_channel_code": {
+                "description": "Code of the channel attributed to the sale (can be null)",
+                "type": "string"
+            }
+        },
+    "order_lines": {
+        "description": "The `order_lines` table stores information about individual items within an order, including pricing, discounts, and product details.",
+        "column": {
+            "id": {
+                "description": "Unique identifier for each order line record (primary key)",
+                "type": "integer"
+            },
+            "order_line_id": {
+                "description": "Unique identifier for the order line (must be unique across all order lines)",
+                "type": "string"
+            },
+            "order_id": {
+                "description": "Identifier for the order to which the order line belongs",
+                "type": "string"
+            },
+            "price_rule_order_line_title": {
+                "description": "Title of any pricing rule applied to the order line (can be null)",
+                "type": "string"
+            },
+            "discount_code_order_line": {
+                "description": "Discount code applied to the order line (can be null)",
+                "type": "string"
+            },
+            "variant_id": {
+                "description": "Identifier for the product variant associated with the order line",
+                "type": "string"
+            },
+            "quantity": {
+                "description": "Number of items in the order line",
+                "type": "integer"
+            },
+            "price_rule_order_line_id": {
+                "description": "Identifier for the pricing rule applied to the order line (can be null)",
+                "type": "string"
+            },
+            "product_discount": {
+                "description": "Discount applied to the product",
+                "type": "float"
+            },
+            "tax_line": {
+                "description": "Tax amount for the order line",
+                "type": "float"
+            },
+            "product_amount_after_discount": {
+                "description": "Amount of the product after applying discounts",
+                "type": "float"
+            },
+            "net_amount_no_vat": {
+                "description": "Net amount of the product without VAT",
+                "type": "float"
+            },
+            "price": {
+                "description": "Price of the product",
+                "type": "float"
+            },
+            "price_in_order": {
+                "description": "Price of the product in the order",
+                "type": "float"
+            }
+        },
+        "relationship": {
+            "order": {
+                "description": "Relationship between the `order_lines` and `orders` tables",
+                "type": "one-to-many"
+            }
+        }
+    },
+    "customers": {
+        "description": "The `customer` table stores comprehensive information about customers, including their personal details, contact information, geographical location, and classification within the system.",
+        "column": {
+            "customer_id": {
+                "description": "Unique identifier for each customer (primary key)",
+                "type": "integer"
+            },
+            "customer_code": {
+                "description": "A code assigned to the customer, possibly for internal reference",
+                "type": "string"
+            },
+            "created_date_07": {
+                "description": "The date when the customer record was created",
+                "type": "date"
+            },
+            "birthday_date_07": {
+                "description": "The customer's birthday (can be null)",
+                "type": "date"
+            },
+            "group_id": {
+                "description": "Identifier for the customer group (can be null)",
+                "type": "integer"
+            },
+            "group_name": {
+                "description": "Name of the customer group (can be null)",
+                "type": "string"
+            },
+            "level_id": {
+                "description": "Identifier for the customer's level or tier (can be null)",
+                "type": "integer"
+            },
+            "level_name": {
+                "description": "Name of the customer's level or tier (can be null)",
+                "type": "string"
+            },
+            "type_id": {
+                "description": "Identifier for the customer type (can be null)",
+                "type": "integer"
+            },
+            "type_name": {
+                "description": "Name of the customer type (can be null)",
+                "type": "string"
+            },
+            "email": {
+                "description": "Customer's email address (can be null)",
+                "type": "string"
+            },
+            "full_name": {
+                "description": "Customer's full name (can be null)",
+                "type": "string"
+            },
+            "gender": {
+                "description": "Customer's gender (can be null)",
+                "type": "string"
+            },
+            "phone": {
+                "description": "Customer's phone number (can be null)",
+                "type": "string"
+            },
+            "status": {
+                "description": "Current status of the customer (can be null)",
+                "type": "string"
+            },
+            "country": {
+                "description": "Customer's country of residence (can be null)",
+                "type": "string"
+            },
+            "city": {
+                "description": "Customer's city of residence (can be null)",
+                "type": "string"
+            },
+            "district": {
+                "description": "District within the city where the customer resides (can be null)",
+                "type": "string"
+            },
+            "ward": {
+                "description": "Smaller administrative division where the customer resides (can be null)",
+                "type": "string"
+            },
+            "full_address": {
+                "description": "Complete address of the customer (can be null)",
+                "type": "string"
+            },
+            "eligible_for_contact": {
+                "description": "Boolean indicating whether the customer can be contacted for marketing or other purposes (can be null)",
+                "type": "boolean"
+            }
+        }
+    }
+}}
