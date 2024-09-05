@@ -4,8 +4,7 @@ __pycache__
 /litellm
 
 
-pipelines/*
-!pipelines/.gitignore
+*.json
 .DS_Store
 
 .venv
