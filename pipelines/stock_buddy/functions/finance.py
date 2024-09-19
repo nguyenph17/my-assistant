@@ -1,7 +1,9 @@
 from vnstock3 import Vnstock
 from pandas import DataFrame
 from typing import Literal, Optional
+from langchain_core.tools import tool
 
+@tool
 def balance_sheet(symbol: str, 
                   period: Optional[Literal["year", "quarter"]] = "year", 
                   lang: Optional[Literal["en", "vi"]] = "vi", 
@@ -31,7 +33,7 @@ def balance_sheet(symbol: str,
     df = stock.finance.balance_sheet(period=period, lang=lang)
     return df
 
-
+@tool
 def income_statement(symbol: str, 
                   period: Optional[Literal["year", "quarter"]] = "year", 
                   lang: Optional[Literal["en", "vi"]] = "vi", 
@@ -60,7 +62,7 @@ def income_statement(symbol: str,
     return df
 
 
-
+@tool
 def cash_flow(symbol: str, 
                   period: Optional[Literal["year", "quarter"]] = "year", 
                   lang: Optional[Literal["en", "vi"]] = "vi", 
@@ -88,6 +90,7 @@ def cash_flow(symbol: str,
     df = stock.finance.cash_flow(period=period, lang=lang)
     return df
 
+@tool
 def ratio(symbol: str, 
                   period: Optional[Literal["year", "quarter"]] = "year", 
                   lang: Optional[Literal["en", "vi"]] = "vi", 
