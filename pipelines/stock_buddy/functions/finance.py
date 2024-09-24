@@ -1,121 +1,113 @@
 from vnstock3 import Vnstock
-from pandas import DataFrame
-from typing import Literal, Optional
+from langgraph.prebuilt import InjectedState
 from langchain_core.tools import tool
+from typing import Optional, Literal, Annotated
 
-@tool
-def balance_sheet(symbol: str, 
+from stock_buddy.functions.helper import invoke_agent_with_dataframe
+
+# Function to handle stock data retrieval and agent invocation
+def handle_financial_data(symbol, period, lang, source, function_name, **kwargs):
+    try:
+        stock = Vnstock().stock(symbol=symbol, source=source)
+        df = getattr(stock.finance, function_name)(period=period, lang=lang, **kwargs)
+        if df is not None and not df.empty:
+            return df
+    except Exception as e:
+        print(f"Error with source {source}: {e}")
+        return None
+
+
+@tool(parse_docstring=True)
+def balance_sheet(state: Annotated[dict, InjectedState], 
+                  symbol: str, 
                   period: Optional[Literal["year", "quarter"]] = "year", 
                   lang: Optional[Literal["en", "vi"]] = "vi", 
-                  source: Optional[Literal["VCI", "TCBS"]] = "VCI",
-                  drop_na: Optional[Literal[True, False]] = True) -> DataFrame:
+                  source: Optional[Literal["VCI", "TCBS"]] = "VCI") -> str:
     """
     This function returns the balance sheet of a company by its symbol.
+    Truy xuất dữ liệu bảng cân đối kế toán của một công ty.
     
     Args:
-        symbol (str): The symbol of the company.
-        period (str): The period of the balance sheet. It can be "year" or "quarter". Default is "year".
-        lang (str): The language of the data. It can be "en" or "vi". Default is "vi".
-        source(str): The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
-        dropna (bool): Whether to drop columns with all 0 values. Default is True.
+        symbol: The symbol of the company.
+        period: The period of the balance sheet. It can be "year" or "quarter". Default is "year".
+        lang: The language of the data. It can be "en" or "vi". Default is "vi".
+        source: The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
     
     Returns:
-        DataFrame: The balance sheet of the company.
+        str: The balance sheet of the company.
     
     """
-    if source == "VCI":
-        stock = Vnstock().stock(symbol=symbol, source=source)
-        df = stock.finance.balance_sheet(period=period, lang=lang, drop_na=drop_na)
-        if df is not None and not df.empty:
-            return df
-    
-    stock = Vnstock().stock(symbol=symbol, source="TCBS")
-    df = stock.finance.balance_sheet(period=period, lang=lang)
-    return df
+    df = handle_financial_data(symbol, period, lang, source, "balance_sheet")
+    if df is None:
+        df = handle_financial_data(symbol, period, lang, "TCBS", "balance_sheet")
+    return invoke_agent_with_dataframe(state, df)
 
-@tool
-def income_statement(symbol: str, 
-                  period: Optional[Literal["year", "quarter"]] = "year", 
-                  lang: Optional[Literal["en", "vi"]] = "vi", 
-                  source: Optional[Literal["VCI", "TCBS"]] = "VCI",
-                  drop_na: Optional[Literal[True, False]] = True) -> DataFrame:
+@tool(parse_docstring=True)
+def income_statement(state: Annotated[dict, InjectedState], 
+                     symbol: str, 
+                     period: Optional[Literal["year", "quarter"]] = "year", 
+                     lang: Optional[Literal["en", "vi"]] = "vi", 
+                     source: Optional[Literal["VCI", "TCBS"]] = "VCI") -> str:
     """
     This function returns the income statement of a company by its symbol.
+    Trích xuất báo cáo lợi nhuận/lãi lỗ của một công ty dựa trên mã cổ phiếu.
 
     Args:
-        symbol (str): The symbol of the company.
-        period (str): The period of the income statement. It can be "year" or "quarter". Default is "year".
-        lang (str): The language of the data. It can be "en" or "vi". Default is "vi".
-        source(str): The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
-        dropna (bool): Whether to drop columns with all 0 values. Default is True.
-    Returns:
-        DataFrame: The income statement of the company.
-    """
-    if source == "VCI":
-        stock = Vnstock().stock(symbol=symbol, source=source)
-        df = stock.finance.income_statement(period=period, lang=lang, drop_na=drop_na)
-        if df is not None and not df.empty:
-            return df
+        symbol: The symbol of the company, if there is no symbol, dont call this function.
+        period: The period of the income statement. It can be "year" or "quarter". Default is "year".
+        source: The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
     
-    stock = Vnstock().stock(symbol=symbol, source="TCBS")
-    df = stock.finance.income_statement(period=period, lang=lang)
-    return df
-
-
-@tool
-def cash_flow(symbol: str, 
-                  period: Optional[Literal["year", "quarter"]] = "year", 
-                  lang: Optional[Literal["en", "vi"]] = "vi", 
-                  source: Optional[Literal["VCI", "TCBS"]] = "VCI",
-                  drop_na: Optional[Literal[True, False]] = True) -> DataFrame:
+    Returns:
+        str: The income statement of the company.
     """
-    This function returns the cash flow of a company by its symbol.
+    df = handle_financial_data(symbol, period, lang, source, "income_statement")
+    if df is None:
+        df = handle_financial_data(symbol, period, lang, "TCBS", "income_statement")
+    return invoke_agent_with_dataframe(state, df)
+
+@tool(parse_docstring=True)
+def cash_flow(state: Annotated[dict, InjectedState], 
+              symbol: str, 
+              period: Optional[Literal["year", "quarter"]] = "year", 
+              lang: Optional[Literal["en", "vi"]] = "vi", 
+              source: Optional[Literal["VCI", "TCBS"]] = "VCI") -> str:
+    """
+    This function returns the cash flow (báo cáo lưu chuyển tiền tệ) of a company by its symbol.
 
     Args:
-        symbol (str): The symbol of the company.
-        period (str): The period of the cash flow. It can be "year" or "quarter". Default is "year".
-        lang (str): The language of the data. It can be "en" or "vi". Default is "vi".
-        source(str): The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
-        dropna (bool): Whether to drop columns with all 0 values. Default is True.
-    Returns:
-        DataFrame: The cash flow of the company.
-    """
-    if source == "VCI":
-        stock = Vnstock().stock(symbol=symbol, source=source)
-        df = stock.finance.cash_flow(period=period, lang=lang, drop_na=drop_na)
-        if df is not None and not df.empty:
-            return df
-    
-    stock = Vnstock().stock(symbol=symbol, source="TCBS")
-    df = stock.finance.cash_flow(period=period, lang=lang)
-    return df
+        symbol: The symbol of the company.
+        period: The period of the cash flow. It can be "year" or "quarter". Default is "year".
+        lang: The language of the data. It can be "en" or "vi". Default is "vi".
+        source: The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
 
-@tool
-def ratio(symbol: str, 
-                  period: Optional[Literal["year", "quarter"]] = "year", 
-                  lang: Optional[Literal["en", "vi"]] = "vi", 
-                  source: Optional[Literal["VCI", "TCBS"]] = "VCI",
-                  drop_na: Optional[Literal[True, False]] = True,
-                  get_all: Optional[Literal[True, False]] = True) -> DataFrame:
+    Returns:
+        str: The cash flow of the company.
     """
-    This function returns the ratio of a company by its symbol.
+    df = handle_financial_data(symbol, period, lang, source, "cash_flow")
+    if df is None:
+        df = handle_financial_data(symbol, period, lang, "TCBS", "cash_flow")
+    return invoke_agent_with_dataframe(state, df)
+
+@tool(parse_docstring=True)
+def ratio(state: Annotated[dict, InjectedState], 
+          symbol: str, 
+          period: Optional[Literal["year", "quarter"]] = "year", 
+          lang: Optional[Literal["en", "vi"]] = "vi", 
+          source: Optional[Literal["VCI", "TCBS"]] = "VCI") -> str:
+    """
+    This function returns the ratio (báo cáo chỉ số tài chính) of a company by its symbol.
 
     Args:
-        symbol (str): The symbol of the company.
-        period (str): The period of the ratio. It can be "year" or "quarter". Default is "quarter".
-        lang (str): The language of the data. It can be "en" or "vi". Default is "vi".
-        source(str): The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
-        dropna (bool): Whether to drop columns with all 0 values. Default is True.
-        get_all (bool): Get all the data. Default is True.
+        symbol: The symbol of the company.
+        period: The period of the ratio. It can be "year" or "quarter". Default is "quarter".
+        lang: The language of the data. It can be "en" or "vi". Default is "vi".
+        source: The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
+
     Returns:
-        DataFrame: The ratio of the company.
+        str: The ratio of the company.
     """
-    if source == "VCI":
-        stock = Vnstock().stock(symbol=symbol, source=source)
-        df = stock.finance.ratio(period=period, lang=lang, drop_na=drop_na)
-        if df is not None and not df.empty:
-            return df
-    
-    stock = Vnstock().stock(symbol=symbol, source="TCBS")
-    df = stock.finance.ratio(period=period, get_all=get_all)
-    return df
+    df = handle_financial_data(symbol, period, lang, source, "ratio")
+    if df is None:
+        df = handle_financial_data(symbol, period, lang, "TCBS", "ratio")
+    return invoke_agent_with_dataframe(state, df)
+

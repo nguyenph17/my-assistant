@@ -62,10 +62,11 @@
 	},
 	"openai": {
 		"api_base_urls": [
-			"https://api.openai.com/v1"
+			"http://host.docker.internal:9099"
 		],
 		"api_keys": [
-			""
-		]
+			"0p3n-w3bu!"
+		],
+		"enable": true
 	}
 }

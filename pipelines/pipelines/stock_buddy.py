@@ -4,6 +4,18 @@ from pydantic import BaseModel
 import os
 import requests
 from typing import Optional
+import sys
+from langchain_openai import ChatOpenAI
+
+sys.path.append(os.getcwd())
+from stock_buddy.graph import financial_chain
+
+
+def generate_title(user_message: str) -> str:
+    llm = ChatOpenAI(model="gpt-4o-mini")
+    title = llm.invoke(user_message)
+    return title.content
+
 
 
 class Pipeline:
@@ -11,11 +23,8 @@ class Pipeline:
         OPENAI_API_KEY: str = ""
 
     def __init__(self):
-        self.name = "OpenAI Pipeline"
+        self.name = "Stock Buddy"
         self.valves = self.Valves(
-            **{
-                "OPENAI_API_KEY": os.getenv()
-            }
         )
 
     async def on_startup(self):
@@ -30,10 +39,12 @@ class Pipeline:
     def pipe(
         self, user_message: str, model_id: str, messages: List[dict], body: dict
     ) -> Union[str, Generator, Iterator]:
+        if "Create a concise, 3-5 word phrase with an emoji as a title for the previous query." in user_message:
+            title = generate_title(user_message)
+            return title
         OPENAI_API_KEY = self.valves.OPENAI_API_KEY
-
-    async def inlet(self, body: dict, user: Optional[dict] = None) -> dict:
-        pass
-
-    async def outlet(self, body: dict, user: Optional[dict] = None) -> dict:
-        pass
+        os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+        answer = financial_chain.invoke(user_message, {"recursion_limit": 10})
+        
+        print(f"############ final answer: {answer}")
+        return answer['messages'][-1].content
