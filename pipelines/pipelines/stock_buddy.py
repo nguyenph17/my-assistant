@@ -39,6 +39,7 @@ class Pipeline:
     def pipe(
         self, user_message: str, model_id: str, messages: List[dict], body: dict
     ) -> Union[str, Generator, Iterator]:
+        print(messages)
         if "Create a concise, 3-5 word phrase with an emoji as a title for the previous query." in user_message:
             title = generate_title(user_message)
             return title

@@ -17,7 +17,7 @@ def handle_financial_data(symbol, period, lang, source, function_name, **kwargs)
         return None
 
 
-@tool(parse_docstring=True)
+@tool(parse_docstring=True, response_format="content_and_artifact")
 def balance_sheet(state: Annotated[dict, InjectedState], 
                   symbol: str, 
                   period: Optional[Literal["year", "quarter"]] = "year", 
@@ -37,12 +37,15 @@ def balance_sheet(state: Annotated[dict, InjectedState],
         str: The balance sheet of the company.
     
     """
-    df = handle_financial_data(symbol, period, lang, source, "balance_sheet")
-    if df is None:
-        df = handle_financial_data(symbol, period, lang, "TCBS", "balance_sheet")
-    return invoke_agent_with_dataframe(state, df)
+    try:
+        df = handle_financial_data(symbol, period, lang, source, "balance_sheet")
+        if df is None:
+            df = handle_financial_data(symbol, period, lang, "TCBS", "balance_sheet")
+        return invoke_agent_with_dataframe(state, df), df
+    except Exception as e:
+        return f"Error: {e}", None
 
-@tool(parse_docstring=True)
+@tool(parse_docstring=True, response_format="content_and_artifact")
 def income_statement(state: Annotated[dict, InjectedState], 
                      symbol: str, 
                      period: Optional[Literal["year", "quarter"]] = "year", 
@@ -60,12 +63,15 @@ def income_statement(state: Annotated[dict, InjectedState],
     Returns:
         str: The income statement of the company.
     """
-    df = handle_financial_data(symbol, period, lang, source, "income_statement")
-    if df is None:
-        df = handle_financial_data(symbol, period, lang, "TCBS", "income_statement")
-    return invoke_agent_with_dataframe(state, df)
+    try:
+        df = handle_financial_data(symbol, period, lang, source, "income_statement")
+        if df is None:
+            df = handle_financial_data(symbol, period, lang, "TCBS", "income_statement")
+        return invoke_agent_with_dataframe(state, df), df
+    except Exception as e:
+        return f"Error: {e}", None
 
-@tool(parse_docstring=True)
+@tool(parse_docstring=True, response_format="content_and_artifact")
 def cash_flow(state: Annotated[dict, InjectedState], 
               symbol: str, 
               period: Optional[Literal["year", "quarter"]] = "year", 
@@ -83,12 +89,15 @@ def cash_flow(state: Annotated[dict, InjectedState],
     Returns:
         str: The cash flow of the company.
     """
-    df = handle_financial_data(symbol, period, lang, source, "cash_flow")
-    if df is None:
-        df = handle_financial_data(symbol, period, lang, "TCBS", "cash_flow")
-    return invoke_agent_with_dataframe(state, df)
+    try:
+        df = handle_financial_data(symbol, period, lang, source, "cash_flow")
+        if df is None:
+            df = handle_financial_data(symbol, period, lang, "TCBS", "cash_flow")
+        return invoke_agent_with_dataframe(state, df), df
+    except Exception as e:
+        return f"Error: {e}", None
 
-@tool(parse_docstring=True)
+@tool(parse_docstring=True, response_format="content_and_artifact")
 def ratio(state: Annotated[dict, InjectedState], 
           symbol: str, 
           period: Optional[Literal["year", "quarter"]] = "year", 
@@ -106,8 +115,11 @@ def ratio(state: Annotated[dict, InjectedState],
     Returns:
         str: The ratio of the company.
     """
-    df = handle_financial_data(symbol, period, lang, source, "ratio")
-    if df is None:
-        df = handle_financial_data(symbol, period, lang, "TCBS", "ratio")
-    return invoke_agent_with_dataframe(state, df)
+    try:
+        df = handle_financial_data(symbol, period, lang, source, "ratio")
+        if df is None:
+            df = handle_financial_data(symbol, period, lang, "TCBS", "ratio")
+        return invoke_agent_with_dataframe(state, df), df
+    except Exception as e:
+        return f"Error: {e}", None
 

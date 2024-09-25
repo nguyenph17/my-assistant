@@ -13,8 +13,12 @@ from langgraph.graph import END, StateGraph, START
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from langgraph.prebuilt import create_react_agent
 
+sys.path.append(os.getcwd())
+
 from stock_buddy.utils import get_current_datetime
 from stock_buddy.functions.finance import balance_sheet, income_statement, cash_flow, ratio
+from stock_buddy.functions.quote import history, intraday, price_depth, price_board
+from stock_buddy.functions.visualization import visualize_data
 
 
 
@@ -60,6 +64,7 @@ def create_team_supervisor(llm: ChatOpenAI, system_prompt, members) -> str:
     )
 
 
+
 # Document writing team graph state
 class StockAgentState(TypedDict):
     messages: Annotated[List[BaseMessage], operator.add]
@@ -87,6 +92,22 @@ finance_agent = create_react_agent(llm,
                                    state_modifier="Your task is to provide the financial data for the conversation. You can provide the balance sheet, income statement, cash flow of a company.")
 finance_node = functools.partial(agent_node, agent=finance_agent, name="FinanceAgent")
 
+visualize_agent = create_react_agent(llm, 
+                                     tools=[visualize_data], 
+                                     state_modifier="Your task is to visualize the data if it is necessary for the conversation.")
+
+visualize_node = functools.partial(agent_node, agent=visualize_agent, name="VisualizeAgent")
+
+
+quote_agent = create_react_agent(llm, 
+                                 tools=[history, intraday, price_depth, price_board], 
+                                 state_modifier="Your task is to provide the stock quote for the conversation. \
+                                    You can use QuoteAgent to retrieve historical price information and order matching data for any security (stocks, futures contracts, warrants, bonds). \
+                                    There are 4 types of stock quote: history, intraday, price depth, price board.")
+
+quote_node = functools.partial(agent_node, agent=quote_agent, name="QuoteAgent")
+
+
 supervisor = create_team_supervisor(
     llm,
     "You are a supervisor tasked with managing a conversation between the following workers: {team_members}. \
@@ -95,9 +116,13 @@ supervisor = create_team_supervisor(
     The workers are: CurrentDateTime, TickerSymbol, FinanceAgent. \
     The worker CurrentDateTime will provide the current date and time if user don't mention a specific time. \
     The worker TickerSymbol will provide the ticker symbol of a company if it is not provided explicitly. \
-    The worker FinanceAgent will provide the financial data of a company. \
-    Only use the worker FinanceAgent if already have the ticker symbol. When finished, respond with FINISH.",
-    ["CurrentDateTime", "TickerSymbol", "FinanceAgent"],
+    Only use the worker FinanceAgent or QuoteAgent if already have the ticker symbol. \
+    The worker FinanceAgent will provide the information about financial data of a company. \
+    You can use FinanceAgent to retrieve financial information for any stock symbol. \
+    The worker QuoteAgent will provide information about the stock quote of a company . \
+    You can use QuoteAgent to retrieve historical price information and order matching data for any security (stocks, futures contracts, warrants, bonds).\
+    When finished, respond with FINISH.",
+    ["CurrentDateTime", "TickerSymbol", "FinanceAgent", "QuoteAgent"],
 )
 
 # Create the graph here:
@@ -105,12 +130,14 @@ graph = StateGraph(StockAgentState)
 graph.add_node("CurrentDateTime", current_datetime_node)
 graph.add_node("TickerSymbol", check_stock_code_node)
 graph.add_node("FinanceAgent", finance_node)
+graph.add_node("QuoteAgent", quote_node)
 graph.add_node("supervisor", supervisor)
 
 # Add the edges that always occur
 graph.add_edge("CurrentDateTime", "supervisor")
 graph.add_edge("TickerSymbol", "supervisor")
 graph.add_edge("FinanceAgent", "supervisor")
+graph.add_edge("QuoteAgent", "supervisor")
 
 # Add the edges where routing applies
 graph.add_conditional_edges(
@@ -120,6 +147,7 @@ graph.add_conditional_edges(
         "CurrentDateTime": "CurrentDateTime",
         "TickerSymbol": "TickerSymbol",
         "FinanceAgent": "FinanceAgent",
+        "QuoteAgent": "QuoteAgent",
         "FINISH": END,
     },
 )
@@ -142,6 +170,8 @@ financial_chain = (
     | graph.compile()
 )
 
+
+# financial_chain.invoke("Lịch sử giá của Vietcombank trong tháng 9/2024", {"recursion_limit": 10})
 
 # config = {"configurable": {"thread_id": "2"}}
 

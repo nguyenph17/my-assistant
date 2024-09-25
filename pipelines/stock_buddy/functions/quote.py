@@ -7,8 +7,9 @@ import pandas as pd
 
 from stock_buddy.functions.helper import invoke_agent_with_dataframe
 
-@tool(parse_docstring=True)
-def history(symbol: str, 
+@tool(parse_docstring=True, response_format="content_and_artifact")
+def history(state: Annotated[dict, InjectedState], 
+            symbol: str, 
             start: str, 
             end: Optional[str], 
             interval: Optional[str] = "1D", 
@@ -16,6 +17,7 @@ def history(symbol: str,
             source: Literal["VCI", "TCBS"]="VCI") -> str:
     """
     This function retrieves historical price data for a given symbol.
+
     Args:
         symbol: The symbol of the company.
         start: The start time for data retrieval. Can be a string in the format "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS".
@@ -25,93 +27,109 @@ def history(symbol: str,
         source: The source of the data. Default is "VCI".
 
     Returns:
-        DataFrame: A DataFrame containing historical price data for the given symbol.
+        str: Information about historical price data for the given symbol.
     """
-    if source == "VCI":
-        stock = Vnstock().stock(symbol=symbol, source=source)
-        df = stock.quote.history(start=start, end=end, interval=interval, count_back=count_back)
-        if df is not None and not df.empty:
-            return df
-    stock = Vnstock().stock(symbol=symbol, source="TCBS")
-    df = stock.quote.history(start=start, end=end, interval=interval, count_back=count_back)
-    return df
+    try:
+        if source == "VCI":
+            stock = Vnstock().stock(symbol=symbol, source=source)
+            df = stock.quote.history(start=start, end=end, interval=interval, count_back=count_back)
+        
+        if df is None or df.empty:
+            stock = Vnstock().stock(symbol=symbol, source="TCBS")
+            df = stock.quote.history(start=start, end=end, interval=interval, count_back=count_back)
+
+        return invoke_agent_with_dataframe(state, df), df
+    except Exception as e:
+        return f"Error: {e}", None
 
 
-def intraday(symbol: str, 
+
+@tool(parse_docstring=True, response_format="content_and_artifact")
+def intraday(state: Annotated[dict, InjectedState],
+             symbol: str, 
              source: Literal["VCI", "TCBS"] = "VCI", 
              page_size: Optional[int]=10_000, 
-             last_time: Optional[str]=None) -> DataFrame:
+             last_time: Optional[str]=None) -> str:
     """
     This function retrieves intraday price data for a given symbol.
     
     Args:
         symbol: The symbol of the company.
-        source: The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
+        source: The source of the data. Default is "VCI".
         page_size: The number of data points to retrieve. Default is 100.
         last_time: The last time of the last data point. Default is None.
 
     Returns:
-        DataFrame: A DataFrame containing intraday price data for the given symbol.
+        str: Information about intraday price data for the given symbol.
     """
-    
-    if source == "VCI":
-        stock = Vnstock().stock(symbol=symbol, source=source)
-        df = stock.quote.intraday(page_size=page_size, last_time=last_time)
-        if df is not None and not df.empty:
-            return df
+    try:
+        if source == "VCI":
+            stock = Vnstock().stock(symbol=symbol, source=source)
+            df = stock.quote.intraday(page_size=page_size, last_time=last_time)
         
-    source = "TCBS"
-    stock = Vnstock().stock(symbol=symbol, source=source)
-    df = stock.quote.intraday(page_size=page_size, last_time=last_time)
-    return df
+        if df is None or df.empty:
+            stock = Vnstock().stock(symbol=symbol, source="TCBS")
+            df = stock.quote.intraday(page_size=page_size, last_time=last_time)
+
+        return invoke_agent_with_dataframe(state, df), df
+    except Exception as e:
+        return f"Error: {e}", None
 
 
-def price_depth(symbol: str, 
-                source: Literal["VCI", "TCBS"] = "VCI") -> DataFrame:
+@tool(parse_docstring=True, response_format="content_and_artifact")
+def price_depth(state: Annotated[dict, InjectedState],
+                symbol: str, 
+                source: Literal["VCI", "TCBS"] = "VCI") -> str:
     """
     This function retrieves price depth data for a given symbol.
     
     Args:
         symbol: The symbol of the company.
-        source: The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
+        source: The source of the data. Default is "VCI".
 
     Returns:
-        DataFrame: A DataFrame containing price depth data for the given symbol.
+        str: Information about price depth data for the given symbol.
     """
-    
-    if source == "VCI":
-        stock = Vnstock().stock(symbol=symbol, source=source)
-        df = stock.quote.price_depth()
-        if df is not None and not df.empty:
-            return df
+    try:
+        if source == "VCI":
+            stock = Vnstock().stock(symbol=symbol, source=source)
+            df = stock.quote.price_depth()
         
-    source = "TCBS"
-    stock = Vnstock().stock(symbol=symbol, source=source)
-    df = stock.quote.price_depth()
-    return df
+        if df is None or df.empty:
+            stock = Vnstock().stock(symbol=symbol, source="TCBS")
+            df = stock.quote.price_depth()
+
+        return invoke_agent_with_dataframe(state, df), df
+    except Exception as e:
+        return f"Error: {e}", None
 
 
-def price_board(symbols: List[str], 
+@tool(parse_docstring=True, response_format="content_and_artifact")
+def price_board(state: Annotated[dict, InjectedState],
+                symbols: List[str], 
                 std_columns: Literal[True, False] = True, 
-                source: Literal["VCI", "TCBS"] = "VCI") -> DataFrame:
+                source: Literal["VCI", "TCBS"] = "VCI") -> str:
     """
     This function returns the price board of a company by its symbol.
     
     Args:
-        symbol: The list of symbols of the companies.
+        symbols: The list of symbols of the companies.
         std_columns: Whether to return the standard columns. Default is True. False will return the extended columns.
-        source: The source of the data. Default is "VCI". Currently, only "VCI" and "TCBS" are supported.
+        source: The source of the data. Default is "VCI".
     
     Returns:
-        DataFrame: The price board of the company.
+        str: Information about price board of the company.
     
     """
-    if source == "VCI":
-        stock = Vnstock().stock(source=source)
-        df = stock.trading.price_board(symbols_list=symbols)
-        if df is not None and not df.empty:
-            return df
-    
-    stock = Vnstock().stock(source="TCBS")
-    df = stock.trading.price_board(symbols_list=symbols, std_columns=std_columns)
-    return df
+    try:
+        if source == "VCI":
+            stock = Vnstock().stock(source=source)
+            df = stock.trading.price_board(symbols_list=symbols)
+        
+        if df is None or df.empty:
+            stock = Vnstock().stock(source="TCBS")
+            df = stock.trading.price_board(symbols_list=symbols)
+
+        return invoke_agent_with_dataframe(state, df), df
+    except Exception as e:
+        return f"Error: {e}", None
